@@ -35,6 +35,7 @@
             label1 = new Label();
             button3 = new Button();
             label2 = new Label();
+            label3 = new Label();
             SuspendLayout();
             // 
             // buttonDescargarFtp
@@ -50,7 +51,7 @@
             // labelState
             // 
             labelState.AutoSize = true;
-            labelState.Location = new Point(113, 152);
+            labelState.Location = new Point(113, 155);
             labelState.Name = "labelState";
             labelState.Size = new Size(120, 15);
             labelState.TabIndex = 10;
@@ -98,18 +99,28 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(25, 217);
+            label2.Location = new Point(25, 209);
             label2.Name = "label2";
             label2.Size = new Size(320, 15);
             label2.TabIndex = 15;
-            label2.Text = "Para ejecutar correctamente Mods isntala y usa SKLauncher";
+            label2.Text = "Para ejecutar correctamente Mods instala y usa SKLauncher";
             label2.Click += label2_Click;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(113, 234);
+            label3.Name = "label3";
+            label3.Size = new Size(112, 15);
+            label3.TabIndex = 16;
+            label3.Text = "Mods descargados: ";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(366, 274);
+            ClientSize = new Size(461, 274);
+            Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(button3);
             Controls.Add(label1);
@@ -131,5 +142,6 @@
         private Label label1;
         private Button button3;
         private Label label2;
+        private Label label3;
     }
 }

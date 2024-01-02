@@ -22,7 +22,7 @@ namespace actualizarmods
 
         private string direccionIPLocal = "192.168.0.200";
         private string IPservidor = "186.31.27.110";
-        private string ftpUsername = "prueba";
+        private string ftpUsername = "fenix";
         private string ftpPassword = "";
 
         public Form1()
@@ -48,27 +48,28 @@ namespace actualizarmods
             }
         }
 
-        private void button2_Click_1(object sender, EventArgs e)
+        private async void button2_Click_1(object sender, EventArgs e)
         {
-            labelState.Text = "intentando descargar mods";
+            labelState.Text = "Intentando descargar mods";
+            int contador = 0;
 
             DialogResult result = MessageBox.Show("¿Deseas borrar los mods anteriores?", "Confirmación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
             {
                 borrarMods();
-                MessageBox.Show("Archivos eliminados con éxito.");
+                labelState.Text = "Archivos eliminados con éxito.";
             }
             else
             {
-                MessageBox.Show("Se han conservado los antiguos mods y se han descargado los nuevos");
+                labelState.Text = "Se han conservado los antiguos mods y se han descargado los nuevos";
             }
 
             try
             {
                 if (!IsInternetConnectionAvailable())
                 {
-                    MessageBox.Show("No hay conexión a Internet. Verifica tu conexión e intenta nuevamente.");
+                    labelState.Text = "No hay conexión a Internet. Verifica tu conexión e intenta nuevamente.";
                     return;
                 }
 
@@ -77,21 +78,26 @@ namespace actualizarmods
                 string ftpUsername = "fenix";
                 labelState.Text = "Descargando, por favor espere";
 
-                FtpWebRequest listRequest = (FtpWebRequest)WebRequest.Create(ftpUrl);
-                listRequest.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
-                listRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-                List<string> lines = new List<string>();
-
-                using (FtpWebResponse listResponse = (FtpWebResponse)listRequest.GetResponse())
-                using (Stream listStream = listResponse.GetResponseStream())
-                using (StreamReader listReader = new StreamReader(listStream))
+                List<string> lines = await Task.Run(() =>
                 {
-                    while (!listReader.EndOfStream)
+                    FtpWebRequest listRequest = (FtpWebRequest)WebRequest.Create(ftpUrl);
+                    listRequest.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
+                    listRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+                    List<string> listLines = new List<string>();
+
+                    using (FtpWebResponse listResponse = (FtpWebResponse)listRequest.GetResponse())
+                    using (Stream listStream = listResponse.GetResponseStream())
+                    using (StreamReader listReader = new StreamReader(listStream))
                     {
-                        lines.Add(listReader.ReadLine());
+                        while (!listReader.EndOfStream)
+                        {
+                            listLines.Add(listReader.ReadLine());
+                        }
                     }
-                }
+
+                    return listLines;
+                });
 
                 foreach (string line in lines)
                 {
@@ -102,28 +108,34 @@ namespace actualizarmods
 
                     string localFilePath = Path.Combine(localPath, fileName);
 
-                    // Verificar si el archivo ya existe en la carpeta local
                     if (File.Exists(localFilePath))
                     {
-                        // Si el archivo ya existe, puedes decidir omitirlo o mostrar un mensaje
-                        labelState.Text = ($"El archivo {fileName} ya existe. No se descargará nuevamente.");
+                        labelState.Text = $"El archivo {fileName} ya existe. No se descargará nuevamente.";
                     }
                     else
                     {
-                        // Descargar el archivo si no existe
-                        FtpWebRequest downloadRequest = (FtpWebRequest)WebRequest.Create(ftpUrl + fileName);
-                        downloadRequest.Method = WebRequestMethods.Ftp.DownloadFile;
-                        downloadRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-                        using (FtpWebResponse downloadResponse = (FtpWebResponse)downloadRequest.GetResponse())
-                        using (Stream sourceStream = downloadResponse.GetResponseStream())
-                        using (Stream targetStream = File.Create(localFilePath))
+                        await Task.Run(() =>
                         {
-                            sourceStream.CopyTo(targetStream);
-                        }
+                            FtpWebRequest downloadRequest = (FtpWebRequest)WebRequest.Create(ftpUrl + fileName);
+                            downloadRequest.Method = WebRequestMethods.Ftp.DownloadFile;
+                            downloadRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+                            using (FtpWebResponse downloadResponse = (FtpWebResponse)downloadRequest.GetResponse())
+                            using (Stream sourceStream = downloadResponse.GetResponseStream())
+                            using (Stream targetStream = File.Create(localFilePath))
+                            {
+                                sourceStream.CopyTo(targetStream);
+                            }
+                        });
+
+                        labelState.Text = $"El archivo {fileName} se está descargando.";
                     }
+
+                    label3.Text = "Mods Descargados: " + Convert.ToString(contador);
+                    contador++;
                 }
-                labelState.Text = "Descargado";
+
+                labelState.Text = "Mods Descargados";
                 MessageBox.Show("Todos los archivos .jar han sido descargados con éxito.");
             }
             catch (WebException webEx)
@@ -147,6 +159,7 @@ namespace actualizarmods
         }
 
 
+
         void borrarMods()
         {
             string localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "mods");
@@ -163,16 +176,16 @@ namespace actualizarmods
                         file.Delete();
                     }
 
-                    MessageBox.Show("Archivos eliminados con éxito.");
+                    labelState.Text = ("Archivos eliminados con éxito.");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error al eliminar archivos: " + ex.Message);
+                    labelState.Text = ("Error al eliminar archivos: " + ex.Message);
                 }
             }
             else
             {
-                MessageBox.Show("La carpeta no existe.");
+                labelState.Text = ("La carpeta no existe.");
             }
         }
 
